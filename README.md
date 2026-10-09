@@ -1,10 +1,16 @@
 # Dragon Codex Boot
 
-给 Windows 版 Codex 桌面客户端播放自定义启动动画，并把动画结尾自然交接到真实、可操作的软件窗口。
+为 Codex 桌面客户端播放自定义启动动画，并把动画结尾自然交接到真实、可操作的软件窗口。仓库包含 Windows 和 macOS 实现。
 
 **社区独立项目，与 OpenAI 无隶属关系。** 源码使用 MIT 许可证。仓库与默认程序包包含一段完整的 1080p 龙娘启动动画，解压即可播放，也支持换成自己的 MP4。视频许可说明见 [随附媒体说明](media/MEDIA_NOTICE.md)。
 
-## 它做什么
+## macOS 版本
+
+仓库现已附带一个原生 macOS 启动器，代码位于 `macos/`，构建说明和功能边界见 [macOS 使用说明](docs/MACOS.md)。它使用 `AVKit` 播放动画、启动 Codex，并在结束时淡出播放器、把焦点交给 Codex。macOS 版不申请屏幕录制权限，也不自动改写 Dock 或官方 App。
+
+macOS 的淡出会揭示 Codex 当前窗口；它不复刻 Windows 版依靠 DWM 缩略图把真实窗口嵌进动画屏幕的效果。Windows 版的 WPF、DWM 和快捷方式集成仍由下文原有实现负责。
+
+## Windows 版功能
 
 1. 居中播放启动视频，默认窗口为 **1920 × 1080 物理像素**。
 2. 同时打开已安装的 Codex 客户端；如果客户端已开，衔接到现有窗口。
@@ -16,7 +22,7 @@
 
 默认配置来自一段约 14 秒、16:9 的动画：11.3 秒等待节点，12.7–13.65 秒交接。这些时间和屏幕坐标必须按自己的视频修改，**不是适用于所有视频的通用模板**。
 
-## 环境
+## Windows 版环境
 
 - Windows 10/11 x64，.NET Framework 4.8。
 - 已安装 Windows 版 Codex 桌面客户端。
@@ -132,12 +138,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package.ps1
 ```text
 src/                         C# WPF 启动器与 DPI 清单
 config/launcher.example.json 公开配置模板
+config/launcher.macos.example.json macOS 配置模板
+macos/                       Swift 原生启动器和单元测试
 scripts/                     构建、导入、测试、快捷方式和打包
+scripts/build-macos.sh       macOS App 构建
+scripts/test-macos.sh        macOS 编译与包检查
 tests/                       配置、几何定位及隔离快捷方式恢复测试
 docs/                        配置、发布与手动验收
-.github/workflows/           Windows 构建及程序包检查
+.github/workflows/           Windows 与 macOS 构建检查
 ```
 
-日志在启动器目录的 `logs/launcher.log`，记录步骤和错误；不保存聊天正文或画面，没有网络遥测。[手动验收](docs/TESTING.md)说明真实窗口检查的范围。
+Windows 日志在启动器目录的 `logs/launcher.log`，记录步骤和错误；不保存聊天正文或画面，没有网络遥测。[Windows 手动验收](docs/TESTING.md)说明真实窗口检查的范围。macOS 的日志写入系统 Console。
 
 参与改进请阅读 [贡献说明](CONTRIBUTING.md)。软件许可见 [LICENSE](LICENSE)，媒体和第三方名称说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
