@@ -6,7 +6,7 @@
 
 ## macOS 版本
 
-仓库现已附带一个原生 macOS 启动器，代码位于 `macos/`，构建说明和功能边界见 [macOS 使用说明](docs/MACOS.md)。既可直接打开启动器来播放动画，也可安装可选的登录监视器，让从原 Codex 图标启动时播放动画。监视器按 Codex 窗口边界定位动画，并在结束时把焦点交给 Codex。macOS 版不申请屏幕录制或辅助功能权限，也不改写 Dock 或官方 App。
+仓库现已附带一个原生 macOS 启动器，代码位于 `macos/`，构建说明和功能边界见 [macOS 使用说明](docs/MACOS.md)。既可直接打开启动器来播放动画，也可安装可选的登录监视器，让从原 Codex 图标启动时播放动画。监视器按 Codex 窗口边界定位动画，并让动画窗口使用连续圆角；结束时把焦点交给 Codex。macOS 版不申请屏幕录制或辅助功能权限，也不改写 Dock 或官方 App。
 
 macOS 的淡出会揭示 Codex 当前窗口；它不复刻 Windows 版依靠 DWM 缩略图把真实窗口嵌进动画屏幕的效果。Windows 版的 WPF、DWM 和快捷方式集成仍由下文原有实现负责。
 
@@ -123,7 +123,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package.ps1
 
 公开默认名是 **Dragon Codex Boot**。官方图标不包含在仓库或默认发布包中；本机私人版本可继续使用自己的名称和图标设置。
 
-## 当前实现的限制
+## Windows 版当前实现的限制
 
 - 为 16:9 视频设计；实际显示器小于配置的物理窗口尺寸时可能超出屏幕，应降低 `PlayerWidth` / `PlayerHeight`。
 - 找到“可见、可响应且稳定”的客户端窗口是一种启发式检查，无法证明所有后台任务已加载完。
@@ -131,7 +131,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package.ps1
 - 动画里的生成式界面和真实界面可能不同；最好让最后屏幕的比例、配色、结构接近真实软件。
 - DWM 缩略图在过渡阶段只显示实时画面，交接完成后才能操作真实客户端。
 - 默认入口替换受权限、扫描范围和时间预算限制。开始菜单/任务栏的固定缓存不等同于目录里的 `.lnk`。
-- 不改写官方应用包，不安装持续监听服务，也不设置开机自启。
+- Windows 版不改写官方应用包、不安装持续监听服务，也不设置开机自启。
 
 ## 项目结构
 
@@ -143,6 +143,8 @@ macos/                       Swift 原生启动器和单元测试
 scripts/                     构建、导入、测试、快捷方式和打包
 scripts/build-macos.sh       macOS App 构建
 scripts/test-macos.sh        macOS 编译与包检查
+scripts/install-codex-integration.sh   安装 macOS Codex 启动监视器
+scripts/uninstall-codex-integration.sh 移除 macOS 启动监视器
 tests/                       配置、几何定位及隔离快捷方式恢复测试
 docs/                        配置、发布与手动验收
 .github/workflows/           Windows 与 macOS 构建检查

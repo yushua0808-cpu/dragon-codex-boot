@@ -191,9 +191,10 @@ private final class BootController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
+        let matchesCodexWindow = targetFrame != nil
         playerWindow.title = configuration.displayName
-        playerWindow.backgroundColor = .black
-        playerWindow.isOpaque = true
+        playerWindow.backgroundColor = matchesCodexWindow ? .clear : .black
+        playerWindow.isOpaque = !matchesCodexWindow
         playerWindow.hasShadow = false
         playerWindow.level = .screenSaver
         playerWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -203,7 +204,12 @@ private final class BootController: NSObject, NSWindowDelegate {
 
         let rootView = NSView(frame: NSRect(origin: .zero, size: frame.size))
         rootView.wantsLayer = true
-        rootView.layer?.backgroundColor = NSColor.black.cgColor
+        rootView.layer?.backgroundColor = matchesCodexWindow ? NSColor.clear.cgColor : NSColor.black.cgColor
+        if matchesCodexWindow {
+            rootView.layer?.cornerRadius = 12
+            rootView.layer?.cornerCurve = .continuous
+            rootView.layer?.masksToBounds = true
+        }
 
         let videoView = AVPlayerView(frame: rootView.bounds)
         videoView.translatesAutoresizingMaskIntoConstraints = false
