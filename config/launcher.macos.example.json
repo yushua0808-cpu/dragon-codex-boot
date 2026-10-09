@@ -1,0 +1,14 @@
+{
+  "DisplayName": "Dragon Codex Boot",
+  "Video": "media/startup.mp4",
+  "AppBundleIdentifier": "com.openai.codex",
+  "AppPath": "",
+  "HoldAt": 11.3,
+  "TransitionStart": 12.7,
+  "TransitionEnd": 13.65,
+  "MaxWaitSeconds": 60,
+  "Volume": 1.0,
+  "Fullscreen": true,
+  "PlayerWidth": 1920,
+  "PlayerHeight": 1080
+}

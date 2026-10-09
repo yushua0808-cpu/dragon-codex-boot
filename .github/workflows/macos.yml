@@ -1,0 +1,21 @@
+name: macOS build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run Swift package tests
+        run: swift test --package-path macos
+      - name: Build and verify macOS app bundle
+        run: ./scripts/test-macos.sh
