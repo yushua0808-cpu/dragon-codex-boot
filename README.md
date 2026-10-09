@@ -6,7 +6,7 @@
 
 ## macOS 版本
 
-仓库现已附带一个原生 macOS 启动器，代码位于 `macos/`，构建说明和功能边界见 [macOS 使用说明](docs/MACOS.md)。它使用 `AVKit` 播放动画、启动 Codex，并在结束时淡出播放器、把焦点交给 Codex。macOS 版不申请屏幕录制权限，也不自动改写 Dock 或官方 App。
+仓库现已附带一个原生 macOS 启动器，代码位于 `macos/`，构建说明和功能边界见 [macOS 使用说明](docs/MACOS.md)。既可直接打开启动器来播放动画，也可安装可选的登录监视器，让从原 Codex 图标启动时播放动画。监视器按 Codex 窗口边界定位动画，并在结束时把焦点交给 Codex。macOS 版不申请屏幕录制或辅助功能权限，也不改写 Dock 或官方 App。
 
 macOS 的淡出会揭示 Codex 当前窗口；它不复刻 Windows 版依靠 DWM 缩略图把真实窗口嵌进动画屏幕的效果。Windows 版的 WPF、DWM 和快捷方式集成仍由下文原有实现负责。
 

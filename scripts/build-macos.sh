@@ -12,12 +12,15 @@ swiftc \
   -module-name DragonCodexBootMac \
   -framework AppKit \
   -framework AVKit \
+  -framework CoreGraphics \
   "$repo_root/macos/Sources/DragonCodexBootCore/LauncherConfiguration.swift" \
   "$repo_root/macos/Sources/DragonCodexBootMac/main.swift" \
   -o "$build_root/DragonCodexBootMac"
 
 rm -rf "$app_bundle"
-mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
+mkdir -p \
+  "$app_bundle/Contents/MacOS" \
+  "$app_bundle/Contents/Resources"
 cp "$build_root/DragonCodexBootMac" "$app_bundle/Contents/MacOS/DragonCodexBootMac"
 cp "$repo_root/config/launcher.macos.example.json" "$app_bundle/Contents/Resources/launcher.macos.example.json"
 cp "$repo_root/media/MEDIA_NOTICE.md" "$app_bundle/Contents/Resources/MEDIA_NOTICE.md"

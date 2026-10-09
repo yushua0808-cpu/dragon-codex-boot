@@ -1,5 +1,6 @@
 import AppKit
 import AVKit
+import CoreGraphics
 import Darwin
 import Foundation
 #if canImport(DragonCodexBootCore)
@@ -73,6 +74,55 @@ private struct RuntimeConfiguration {
     }
 }
 
+private enum LaunchAgentIntegration {
+    static let label = "community.dragoncodexboot.codex-watcher"
+    static let plistName = "\(label).plist"
+
+    static func propertyList(executablePath: String) -> [String: Any] {
+        [
+            "Label": label,
+            "ProgramArguments": [executablePath, "--watch"],
+            "RunAtLoad": true,
+            "LimitLoadToSessionType": "Aqua",
+        ]
+    }
+
+    static func install(executablePath: String) throws -> URL {
+        let libraryDirectory = try FileManager.default.url(
+            for: .libraryDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let launchAgentsDirectory = libraryDirectory.appendingPathComponent("LaunchAgents", isDirectory: true)
+        try FileManager.default.createDirectory(at: launchAgentsDirectory, withIntermediateDirectories: true)
+        let plistURL = launchAgentsDirectory.appendingPathComponent(plistName)
+        let data = try PropertyListSerialization.data(
+            fromPropertyList: propertyList(executablePath: executablePath),
+            format: .xml,
+            options: 0
+        )
+        try data.write(to: plistURL, options: .atomic)
+        return plistURL
+    }
+
+    static func uninstall() throws -> URL {
+        let libraryDirectory = try FileManager.default.url(
+            for: .libraryDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: false
+        )
+        let plistURL = libraryDirectory
+            .appendingPathComponent("LaunchAgents", isDirectory: true)
+            .appendingPathComponent(plistName)
+        if FileManager.default.fileExists(atPath: plistURL.path) {
+            try FileManager.default.removeItem(at: plistURL)
+        }
+        return plistURL
+    }
+}
+
 @MainActor
 private final class BootController: NSObject, NSWindowDelegate {
     private let configuration: LauncherConfiguration
@@ -91,28 +141,40 @@ private final class BootController: NSObject, NSWindowDelegate {
     private var waitingAtHold = false
     private var elapsedBeforeWait: Double = 0
     private var startedAt = Date()
+    private let watchMode: Bool
+    private let onFinish: (@MainActor () -> Void)?
 
-    init(runtime: RuntimeConfiguration) throws {
+    init(
+        runtime: RuntimeConfiguration,
+        targetApplication: NSRunningApplication? = nil,
+        watchMode: Bool = false,
+        onFinish: (@MainActor () -> Void)? = nil
+    ) throws {
         configuration = runtime.configuration
         videoURL = runtime.configuration.videoURL(relativeTo: runtime.root)
         let resolved = try Self.resolveApplication(for: runtime.configuration)
         appURL = resolved.url
         targetBundleIdentifier = resolved.bundleIdentifier
+        self.targetApplication = targetApplication
+        self.watchMode = watchMode
+        self.onFinish = onFinish
         super.init()
         guard FileManager.default.fileExists(atPath: videoURL.path) else {
             throw LauncherError.missingVideo(videoURL)
         }
     }
 
-    func start() {
+    func start(matching targetFrame: CGRect? = nil) {
         let app = NSApplication.shared
-        app.setActivationPolicy(.regular)
-        targetApplication = runningTargetApplication()
+        app.setActivationPolicy(watchMode ? .accessory : .regular)
+        if !watchMode { targetApplication = runningTargetApplication() }
 
         let screen = NSScreen.main ?? NSScreen.screens.first
         let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1280, height: 800)
         let frame: NSRect
-        if configuration.fullscreen, let screenFrame = screen?.frame {
+        if let targetFrame {
+            frame = targetFrame
+        } else if configuration.fullscreen, let screenFrame = screen?.frame {
             frame = screenFrame
         } else {
             frame = NSRect(
@@ -146,7 +208,7 @@ private final class BootController: NSObject, NSWindowDelegate {
         let videoView = AVPlayerView(frame: rootView.bounds)
         videoView.translatesAutoresizingMaskIntoConstraints = false
         videoView.controlsStyle = .none
-        videoView.videoGravity = .resizeAspect
+        videoView.videoGravity = .resizeAspectFill
         rootView.addSubview(videoView)
         NSLayoutConstraint.activate([
             videoView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
@@ -183,7 +245,11 @@ private final class BootController: NSObject, NSWindowDelegate {
         playerWindow.makeKeyAndOrderFront(nil)
         app.activate()
         installEscapeMonitor()
-        beginOpeningTarget()
+        if let targetApplication {
+            revealTargetBehindOverlay(targetApplication)
+        } else {
+            beginOpeningTarget()
+        }
         beginPlayback(in: videoView)
         startedAt = Date()
         let playbackTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
@@ -261,6 +327,10 @@ private final class BootController: NSObject, NSWindowDelegate {
 
     private func tick() {
         guard !handedOff, let player, let window else { return }
+        if watchMode, targetApplication?.isTerminated != false {
+            handOff()
+            return
+        }
         if Date().timeIntervalSince(startedAt) > configuration.maxWaitSeconds + 20 {
             handOff()
             return
@@ -330,6 +400,15 @@ private final class BootController: NSObject, NSWindowDelegate {
         window?.close()
         window = nil
 
+        if watchMode {
+            if let app = targetApplication, !app.isTerminated {
+                app.unhide()
+                _ = app.activate(options: [.activateAllWindows])
+            }
+            onFinish?()
+            return
+        }
+
         if let app = targetApplication, !app.isTerminated {
             app.unhide()
             _ = app.activate(options: [.activateAllWindows])
@@ -348,7 +427,7 @@ private final class BootController: NSObject, NSWindowDelegate {
         if !handedOff { handOff() }
     }
 
-    private static func resolveApplication(for configuration: LauncherConfiguration) throws -> (url: URL, bundleIdentifier: String) {
+    fileprivate static func resolveApplication(for configuration: LauncherConfiguration) throws -> (url: URL, bundleIdentifier: String) {
         let fileManager = FileManager.default
         let bundleIdentifier = configuration.appBundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
         let rawPath = configuration.appPath.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -373,11 +452,165 @@ private final class BootController: NSObject, NSWindowDelegate {
     }
 }
 
+private enum CodexWindowGeometry {
+    static func frame(for processIdentifier: pid_t) -> CGRect? {
+        guard let windowList = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements],
+            kCGNullWindowID
+        ) as? [[String: Any]] else {
+            return nil
+        }
+
+        let candidates: [(frame: CGRect, area: CGFloat)] = windowList.compactMap { window in
+            guard let owner = window[kCGWindowOwnerPID as String] as? NSNumber,
+                  owner.int32Value == processIdentifier,
+                  (window[kCGWindowLayer as String] as? NSNumber)?.intValue == 0,
+                  ((window[kCGWindowAlpha as String] as? NSNumber)?.doubleValue ?? 1) > 0.05,
+                  let bounds = window[kCGWindowBounds as String] as? NSDictionary else {
+                return nil
+            }
+
+            var frame = CGRect.zero
+            guard CGRectMakeWithDictionaryRepresentation(bounds as CFDictionary, &frame),
+                  frame.width >= 350,
+                  frame.height >= 250 else {
+                return nil
+            }
+            return (frame, frame.width * frame.height)
+        }
+
+        guard let quartzFrame = candidates.max(by: { $0.area < $1.area })?.frame else {
+            return nil
+        }
+
+        // CGWindow bounds use a top-left origin; NSWindow frames use a bottom-left origin.
+        let mainDisplayHeight = CGDisplayBounds(CGMainDisplayID()).height
+        return CGRect(
+            x: quartzFrame.minX,
+            y: mainDisplayHeight - quartzFrame.maxY,
+            width: quartzFrame.width,
+            height: quartzFrame.height
+        )
+    }
+}
+
+@MainActor
+private final class CodexLaunchMonitor {
+    private let runtime: RuntimeConfiguration
+    private let targetBundleIdentifier: String
+    private var launchObserver: NSObjectProtocol?
+    private var windowPollTimer: Timer?
+    private var pendingApplication: NSRunningApplication?
+    private var pendingSince = Date()
+    private var lastWindowFrame: CGRect?
+    private var stableFrameCount = 0
+    private var activeController: BootController?
+
+    init(runtime: RuntimeConfiguration) throws {
+        self.runtime = runtime
+        targetBundleIdentifier = try BootController.resolveApplication(for: runtime.configuration).bundleIdentifier
+    }
+
+    func start() {
+        let workspace = NSWorkspace.shared
+        launchObserver = workspace.notificationCenter.addObserver(
+            forName: NSWorkspace.didLaunchApplicationNotification,
+            object: workspace,
+            queue: .main
+        ) { [weak self] notification in
+            guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
+                return
+            }
+            Task { @MainActor in self?.applicationDidLaunch(application) }
+        }
+        NSLog("Dragon Codex Boot is watching for %@ launches", targetBundleIdentifier)
+    }
+
+    private func applicationDidLaunch(_ application: NSRunningApplication) {
+        guard application.bundleIdentifier == targetBundleIdentifier,
+              activeController == nil else {
+            return
+        }
+
+        pendingApplication = application
+        pendingSince = Date()
+        lastWindowFrame = nil
+        stableFrameCount = 0
+        windowPollTimer?.invalidate()
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.pollForWindow() }
+        }
+        windowPollTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+        pollForWindow()
+    }
+
+    private func pollForWindow() {
+        guard let application = pendingApplication, !application.isTerminated else {
+            stopWaitingForWindow()
+            return
+        }
+
+        if let frame = CodexWindowGeometry.frame(for: application.processIdentifier) {
+            if frame == lastWindowFrame {
+                stableFrameCount += 1
+            } else {
+                lastWindowFrame = frame
+                stableFrameCount = 1
+            }
+            guard stableFrameCount >= 2 else { return }
+
+            stopWaitingForWindow()
+            do {
+                let controller = try BootController(
+                    runtime: runtime,
+                    targetApplication: application,
+                    watchMode: true,
+                    onFinish: { [weak self] in self?.activeController = nil }
+                )
+                activeController = controller
+                controller.start(matching: frame)
+            } catch {
+                NSLog("Could not start Codex launch animation: %@", error.localizedDescription)
+            }
+            return
+        }
+
+        if Date().timeIntervalSince(pendingSince) > 30 {
+            NSLog("Codex launched without a visible main window; skipping startup animation")
+            stopWaitingForWindow()
+        }
+    }
+
+    private func stopWaitingForWindow() {
+        windowPollTimer?.invalidate()
+        windowPollTimer = nil
+        pendingApplication = nil
+        lastWindowFrame = nil
+        stableFrameCount = 0
+    }
+}
+
 @MainActor
 private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: BootController?
+    private var launchMonitor: CodexLaunchMonitor?
+    private let watchMode = CommandLine.arguments.contains("--watch")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if watchMode {
+            NSApplication.shared.setActivationPolicy(.accessory)
+            do {
+                let runtime = try RuntimeConfiguration.load()
+                launchMonitor = try CodexLaunchMonitor(runtime: runtime)
+                launchMonitor?.start()
+            } catch {
+                NSLog("Could not start Codex launch monitor: %@", error.localizedDescription)
+                NSApplication.shared.terminate(nil)
+            }
+            return
+        }
+
         do {
             let runtime = try RuntimeConfiguration.load()
             controller = try BootController(runtime: runtime)
@@ -389,7 +622,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { !watchMode }
 }
 
 private func exampleConfigurationURL() -> URL? {
@@ -409,6 +642,29 @@ private func exampleConfigurationURL() -> URL? {
 @MainActor
 private struct DragonCodexBootMacApp {
     static func main() {
+        if CommandLine.arguments.contains("--install-integration") {
+            do {
+                let executablePath = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path
+                let plistURL = try LaunchAgentIntegration.install(executablePath: executablePath)
+                print("Codex launch monitor manifest written: \(plistURL.path)")
+                exit(0)
+            } catch {
+                fputs("Could not write the Codex launch monitor manifest: \(error.localizedDescription)\n", stderr)
+                exit(1)
+            }
+        }
+
+        if CommandLine.arguments.contains("--uninstall-integration") {
+            do {
+                let plistURL = try LaunchAgentIntegration.uninstall()
+                print("Codex launch monitor manifest removed: \(plistURL.path)")
+                exit(0)
+            } catch {
+                fputs("Could not remove the Codex launch monitor: \(error.localizedDescription)\n", stderr)
+                exit(1)
+            }
+        }
+
         if CommandLine.arguments.contains("--self-test") {
             do {
                 guard let url = exampleConfigurationURL() else { throw LauncherError.missingConfig }
@@ -423,7 +679,14 @@ private struct DragonCodexBootMacApp {
                         throw LauncherConfigurationError("播放器淡出曲线检查失败。")
                     }
                 }
-                print("macOS launcher configuration and fade checks passed: \(url.path)")
+                let agentManifest = LaunchAgentIntegration.propertyList(
+                    executablePath: "/Applications/DragonCodexBoot.app/Contents/MacOS/DragonCodexBootMac"
+                )
+                guard (agentManifest["ProgramArguments"] as? [String])?.last == "--watch" else {
+                    throw LauncherConfigurationError("登录监视器启动参数检查失败。")
+                }
+                _ = try PropertyListSerialization.data(fromPropertyList: agentManifest, format: .xml, options: 0)
+                print("macOS launcher configuration, fade, and launch monitor checks passed: \(url.path)")
                 exit(0)
             } catch {
                 fputs("macOS launcher self-test failed: \(error.localizedDescription)\n", stderr)

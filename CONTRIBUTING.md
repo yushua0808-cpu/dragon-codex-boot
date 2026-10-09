@@ -3,7 +3,7 @@
 欢迎修复媒体播放、窗口定位、DPI、配置校准和无障碍交接方面的问题。
 
 1. Fork 仓库，在分支中修改源码。
-2. Windows 变更运行 `scripts/test.ps1`；macOS 变更运行 `swift test --package-path macos` 和 `scripts/test-macos.sh`。对涉及真实窗口的变动，再按平台完成相应手动检查。
+2. Windows 变更运行 `scripts/test.ps1`；macOS 变更运行 `swift test --package-path macos` 和 `scripts/test-macos.sh`。涉及登录监视器、真实窗口定位或焦点交接的变动，再在安装了 Codex 的 macOS 桌面上手动检查。
 3. 提交 PR，写明具体触发条件、变化后的表现和验证范围。
 
 提交代码适用仓库的 MIT 许可证。不要提交聊天数据、账户文件、凭据、个人配置、官方提取资产或许可不明的角色和音乐文件。

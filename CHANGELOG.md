@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- macOS：可选登录监视器支持从原 Codex 图标启动动画，并按可见 Codex 窗口位置和尺寸显示；新增安装与卸载脚本。
 - 新增 Swift 原生 macOS 启动器，使用 AVKit 播放动画并在结束时交接到 Codex。
 - 新增独立 macOS 配置、构建脚本、验证脚本和 macOS CI；保留随附视频的媒体说明。
 
