@@ -3,14 +3,15 @@
   "ScanAllLocalDrives": true,
   "Video": "media/startup.mp4",
   "AppLaunch": "shell:AppsFolder\\OpenAI.Codex_2p2nqsd0c76g0!App",
+  "UseImageWallpaper": false,
   "ProcessPathContains": "OpenAI.Codex_",
   "ProcessNames": [
     "ChatGPT",
     "Codex"
   ],
-  "HoldAt": 11.3,
-  "TransitionStart": 12.7,
-  "TransitionEnd": 13.65,
+  "HoldAt": 11.65,
+  "TransitionStart": 12.45,
+  "TransitionEnd": 13.95,
   "MaxWaitSeconds": 60,
   "Volume": 1,
   "PlayerWidth": 1920,
@@ -18,28 +19,35 @@
   "MatchClientToPlayer": true,
   "ScreenFrames": [
     {
-      "Time": 12.65,
-      "X": 0.123,
-      "Y": 0.094,
-      "Width": 0.736,
-      "Height": 0.725
+      "Time": 12.45,
+      "X": 0.208333,
+      "Y": 0.208333,
+      "Width": 0.583334,
+      "Height": 0.583334
     },
     {
-      "Time": 13,
-      "X": 0.074,
-      "Y": 0.061,
-      "Width": 0.845,
-      "Height": 0.825
+      "Time": 12.75,
+      "X": 0.191667,
+      "Y": 0.191667,
+      "Width": 0.616666,
+      "Height": 0.616666
     },
     {
-      "Time": 13.5,
-      "X": 0,
-      "Y": 0,
-      "Width": 1,
-      "Height": 1
+      "Time": 13.2,
+      "X": 0.104167,
+      "Y": 0.104167,
+      "Width": 0.791666,
+      "Height": 0.791666
     },
     {
       "Time": 13.65,
+      "X": 0.016667,
+      "Y": 0.016667,
+      "Width": 0.966666,
+      "Height": 0.966666
+    },
+    {
+      "Time": 13.95,
       "X": 0,
       "Y": 0,
       "Width": 1,

@@ -1,5 +1,10 @@
 /build/
 /dist/
+/animation/.hyperframes/
+/animation/.thumbnails/
+/animation/.waveform-cache/
+/animation/check.log
+/animation/node_modules/
 /.local/
 **/logs/
 **/qa/

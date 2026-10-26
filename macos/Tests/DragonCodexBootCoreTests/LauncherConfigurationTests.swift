@@ -4,7 +4,7 @@ import XCTest
 
 final class LauncherConfigurationTests: XCTestCase {
     func testExampleConfigurationDecodesAndValidates() throws {
-        let json = #"{"DisplayName":"Dragon Codex Boot","Video":"media/startup.mp4","AppBundleIdentifier":"com.openai.codex","AppPath":"","HoldAt":11.3,"TransitionStart":12.7,"TransitionEnd":13.65,"MaxWaitSeconds":60,"Volume":1,"Fullscreen":true,"PlayerWidth":1920,"PlayerHeight":1080}"#
+        let json = #"{"DisplayName":"Dragon Codex Boot","Video":"media/startup.mp4","AppBundleIdentifier":"com.openai.codex","AppPath":"","HoldAt":11.65,"TransitionStart":12.45,"TransitionEnd":13.95,"MaxWaitSeconds":60,"Volume":1,"Fullscreen":true,"PlayerWidth":1920,"PlayerHeight":1080}"#
         let configuration = try LauncherConfiguration.decode(from: Data(json.utf8))
         XCTAssertEqual(configuration.appBundleIdentifier, "com.openai.codex")
         XCTAssertTrue(configuration.fullscreen)
@@ -13,9 +13,9 @@ final class LauncherConfigurationTests: XCTestCase {
     func testPlayerFadesSmoothlyAcrossConfiguredTransition() {
         let configuration = LauncherConfiguration()
         XCTAssertEqual(configuration.playerOpacity(at: 12), 1, accuracy: 0.0001)
-        XCTAssertEqual(configuration.playerOpacity(at: 12.7), 1, accuracy: 0.0001)
-        XCTAssertEqual(configuration.playerOpacity(at: 13.175), 0.5, accuracy: 0.0001)
-        XCTAssertEqual(configuration.playerOpacity(at: 13.65), 0, accuracy: 0.0001)
+        XCTAssertEqual(configuration.playerOpacity(at: 12.45), 1, accuracy: 0.0001)
+        XCTAssertEqual(configuration.playerOpacity(at: 13.2), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(configuration.playerOpacity(at: 13.95), 0, accuracy: 0.0001)
         XCTAssertEqual(configuration.playerOpacity(at: 20), 0, accuracy: 0.0001)
     }
 

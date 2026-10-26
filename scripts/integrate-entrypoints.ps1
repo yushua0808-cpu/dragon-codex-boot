@@ -32,7 +32,14 @@ $report=[ordered]@{
         'Shared shortcuts require write permission. Taskbar pins may need unpinning and repinning.',
         'Inaccessible, reparse, system/runtime/cache folders and the launcher folder are skipped; scanning has a time budget.')
 }
-function Hash([string]$Path) { (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash }
+function Hash([string]$Path) {
+    # Use the framework already required by the launcher. This also works when
+    # PowerShell module auto-loading is unavailable in the child process.
+    $stream=[IO.File]::OpenRead($Path)
+    $sha=[Security.Cryptography.SHA256]::Create()
+    try { [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-','') }
+    finally { $stream.Dispose();$sha.Dispose() }
+}
 function Write-Json([string]$Path,$Value) {
     $temp=$Path+'.'+[Guid]::NewGuid().ToString('N')+'.tmp'
     $Value | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $temp -Encoding UTF8
@@ -233,6 +240,11 @@ try {
         foreach ($folder in @('DesktopDirectory','Programs')) {
             $dir=[Environment]::GetFolderPath($folder)
             if ($dir -and (Test-Path -LiteralPath $dir -PathType Container)) { Replace-Link (Join-Path $dir $name) $true }
+        }
+        # A distinct Start entry lets Windows offer a taskbar pin without confusing it with the MSIX app.
+        $programs=[Environment]::GetFolderPath('Programs')
+        if ($programs -and (Test-Path -LiteralPath $programs -PathType Container)) {
+            Replace-Link (Join-Path $programs 'Dragon Codex Boot.lnk') $true
         }
     }
     $report.Status=if ($report.Errors.Count -or $report.ScanTimedOut -or $report.SkippedFolders) { 'CompletedWithLimits' } else { 'Completed' }

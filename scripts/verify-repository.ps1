@@ -3,8 +3,9 @@ $repoRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $files=@(& git -c core.quotePath=false -C $repoRoot ls-files)
 if ($LASTEXITCODE -ne 0 -or $files.Count -eq 0) { throw 'No tracked repository files. Initialize and stage the clean source first.' }
 foreach ($name in $files) {
-    if ($name -eq 'media/startup.mp4') {
-        if ((Get-Item -LiteralPath (Join-Path $repoRoot $name)).Length -ge 100MB) { throw 'Demo video exceeds the regular Git file limit.' }
+    if ($name -eq 'media/startup.mp4' -or $name -eq 'animation/assets/lu-mingfei-cyber.png' -or
+        $name -eq 'animation/assets/lu-mingfei-workspace-bg.png') {
+        if ((Get-Item -LiteralPath (Join-Path $repoRoot $name)).Length -ge 100MB) { throw ('Approved media exceeds the regular Git file limit: '+$name) }
         continue
     }
     if ($name -match '(^|/)(build|dist|\.local|logs|qa|\.integration)/' -or $name -match '\.(mp4|mov|webm|ico|lnk|exe|dll|pdb|zip|pem|key)$') {
@@ -36,7 +37,7 @@ try {
     try { $packedConfig=$reader.ReadToEnd() | ConvertFrom-Json } finally { $reader.Dispose() }
     if ($packedConfig.Video -ne 'media/startup.mp4') { throw 'Private config packaged.' }
     if ($packedConfig.AutoReplaceEntrypoints -ne $true -or $packedConfig.ScanAllLocalDrives -ne $true) { throw 'First-run integration defaults missing.' }
-    foreach ($name in @('scripts/integrate-entrypoints.ps1','Restore-Original-Entrypoints.cmd','Rescan-Entrypoints.cmd','docs/ENTRYPOINTS.md')) {
+    foreach ($name in @('scripts/integrate-entrypoints.ps1','Restore-Original-Entrypoints.cmd','Rescan-Entrypoints.cmd','docs/ENTRYPOINTS.md','licenses/APACHE-2.0-HyperFrames.txt')) {
         if (!$archive.GetEntry($name)) { throw ('Entrypoint feature file missing: '+$name) }
     }
     $exeEntry=$archive.GetEntry('DragonCodexBoot.exe')
@@ -54,4 +55,4 @@ try {
 } finally { $archive.Dispose() }
 $expected=(Get-Content -LiteralPath ($zip.FullName+'.sha256') -Raw).Trim().Split(' ')[0]
 if ($expected -ine (Get-FileHash -LiteralPath $zip.FullName).Hash) { throw 'Archive hash mismatch.' }
-Write-Output ('PASS: '+$files.Count+' tracked files; only the approved demo video included; private paths and credential markers excluded; package entries and hashes checked.')
+Write-Output ('PASS: '+$files.Count+' tracked files; only the approved demo video and character background included; private paths and credential markers excluded; package entries and hashes checked.')

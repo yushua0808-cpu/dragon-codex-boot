@@ -68,7 +68,7 @@ final class Launcher: NSObject, NSApplicationDelegate {
                     let playable = try await asset.load(.isPlayable)
                     let videos = try await asset.loadTracks(withMediaType: .video)
                     let audios = try await asset.loadTracks(withMediaType: .audio)
-                    guard playable, duration.seconds > 13.65, !videos.isEmpty, !audios.isEmpty else {
+                    guard playable, duration.seconds > 13.95, !videos.isEmpty, !audios.isEmpty else {
                         self.fail("视频验证失败。")
                         return
                     }
@@ -158,12 +158,12 @@ final class Launcher: NSObject, NSApplicationDelegate {
                 self.playbackStarted = true
                 report("PLAYBACK advancing")
             }
-            if time.seconds >= 11.3 && !self.launchFinished && self.heldAt == nil {
+            if time.seconds >= 11.65 && !self.launchFinished && self.heldAt == nil {
                 self.heldAt = Date()
                 self.player?.pause()
                 report("HOLD waiting for application")
             }
-            if time.seconds >= 12.7 && self.launchFinished { self.handoff() }
+            if time.seconds >= 12.45 && self.launchFinished { self.handoff() }
         }
     }
 

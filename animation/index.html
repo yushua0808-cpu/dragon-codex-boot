@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050407; }
+    #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: #f7f0f0; background: #050407; font-family: Arial, sans-serif; }
+    .clip { position: absolute; inset: 0; overflow: hidden; }
+    #art { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; transform-origin: 37% 47%; }
+    #art-dark { position: absolute; inset: 0; background: linear-gradient(90deg, #02020400 0%, #02020400 34%, #03020555 55%, #020204bb 100%); }
+    #texture { position: absolute; inset: 0; opacity: .14; background: repeating-linear-gradient(0deg, transparent 0 6px, #ff4d5d22 7px, transparent 8px); }
+    #scan { position: absolute; left: 0; right: 0; top: 0; height: 4px; opacity: .65; background: #ff5d68; box-shadow: 0 0 17px #ff2020, 0 0 65px #ef171788; }
+    .topline { position: absolute; left: 82px; right: 82px; top: 52px; display: flex; justify-content: space-between; font: 20px Consolas, monospace; letter-spacing: .17em; color: #ffc9ca; }
+    .line { position: absolute; left: 82px; right: 82px; height: 1px; background: #ff666666; }
+    .line.top { top: 98px; }.line.bottom { bottom: 97px; }
+    .foot { position: absolute; left: 82px; right: 82px; bottom: 50px; display: flex; justify-content: space-between; font: 16px Consolas, monospace; letter-spacing: .17em; color: #cb878d; }
+    .scene-one .title-block { position: absolute; left: 1010px; top: 250px; width: 800px; }
+    .scene-one .micro { color: #ff727b; font: 24px Consolas, monospace; letter-spacing: .28em; }
+    .scene-one .sub { margin-top: 230px; width: 690px; color: #e6c4c7; font: 33px Arial, sans-serif; line-height: 1.35; letter-spacing: .04em; }
+    .scene-one .tag { display: inline-block; margin-top: 42px; padding: 14px 24px; border: 1px solid #ff626688; color: #ffadb3; background: #23090ec9; font: 19px Consolas, monospace; letter-spacing: .16em; }
+    #name-scan { position: absolute; left: 945px; top: 315px; width: 880px; height: 220px; }
+    .scene-two .side-title { position: absolute; left: 985px; top: 246px; font: bold 91px Arial, sans-serif; line-height: .98; letter-spacing: -.04em; text-shadow: 0 0 35px #ff151544; }
+    .scene-two .side-title strong { color: #ff5b63; }
+    .scene-two .signal { position: absolute; left: 992px; top: 574px; width: 724px; padding: 26px 34px; border-left: 3px solid #ff5c61; background: #16090ecb; font: 25px Consolas, monospace; line-height: 1.7; color: #e8b9bc; }
+    .scene-two .signal b { color: #fff3f2; font-weight: 500; }
+    .scene-two .corner { position: absolute; left: 990px; top: 745px; color: #ff888c; font: 20px Consolas, monospace; letter-spacing: .2em; }
+    .scene-two .trace { position: absolute; left: 1060px; top: 765px; width: 645px; height: 100px; }
+    .scene-three .intro { position: absolute; left: 0; right: 0; top: 142px; text-align: center; color: #ffa8ad; font: 20px Consolas, monospace; letter-spacing: .27em; }
+    #portal { position: absolute; left: 400px; top: 225px; width: 1120px; height: 630px; transform-origin: center center; border: 2px solid #ff5a61; border-radius: 18px; overflow: hidden; background: radial-gradient(circle at 15% 50%, #2d1219, #0b080e 64%); box-shadow: 0 0 0 12px #ff33331b, 0 0 95px #f9232355; }
+    #portal .workspace-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .72; }
+    #portal .bar { position: relative; height: 64px; border-bottom: 1px solid #793f46; display: flex; align-items: center; padding: 0 30px; gap: 11px; font: 19px Consolas, monospace; letter-spacing: .14em; color: #e2afb2; background: #0b080ea8; }
+    #portal .dot { width: 10px; height: 10px; border-radius: 50%; background: #9c484e; }.dot:first-child { background: #ff7b76; }
+    #portal .brand { margin-left: 23px; color: #fff1f0; }
+    #portal .content { position: relative; padding: 98px 100px; text-shadow: 0 2px 18px #08050bcc; }
+    #portal .prompt { color: #ff8186; font: 23px Consolas, monospace; letter-spacing: .13em; }
+    #portal .ready { margin-top: 23px; font: bold 88px Arial, sans-serif; letter-spacing: -.045em; color: #fff7f6; }
+    #portal .desc { margin-top: 19px; color: #d6afb2; font: 26px Arial, sans-serif; }
+    #portal .cursor { display: inline-block; width: 17px; height: 69px; margin-left: 13px; vertical-align: -10px; background: #ff6469; box-shadow: 0 0 25px #ff5252; }
+    .scene-three .handoff { position: absolute; left: 0; right: 0; bottom: 126px; text-align: center; color: #e2a2a6; font: 19px Consolas, monospace; letter-spacing: .22em; }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-mlg3" id="root" data-composition-id="main" data-start="0" data-duration="14.4" data-width="1920" data-height="1080">
+    <img data-hf-id="hf-kwdj" id="art" src="assets/lu-mingfei-cyber.png" alt="" />
+    <div data-hf-id="hf-rd01" id="art-dark"></div><div data-hf-id="hf-b5vu" id="texture"></div><div data-hf-id="hf-vz0a" id="scan"></div>
+    <section data-hf-id="hf-jtvi" id="wake" class="clip scene-one" data-start="0" data-duration="5.2" data-track-index="0">
+      <div data-hf-id="hf-o5lv" class="topline"><span data-hf-id="hf-smxb">DRAGON CODEX BOOT</span><span data-hf-id="hf-p9uh">01 / SIGNAL</span></div><div data-hf-id="hf-kmbn" class="line top"></div>
+      <div data-hf-id="hf-ec9e" class="title-block" id="title-block"><div data-hf-id="hf-tlrr" class="micro">SUBJECT IDENTIFIED / 001</div><div data-hf-id="hf-p0qf" class="sub">The signal is live.<br data-hf-id="hf-x5px" />The story is yours to write.</div><div data-hf-id="hf-ezci" class="tag">SYSTEM INITIALIZING <span data-hf-id="hf-x5gq" id="init-dots">● ● ●</span></div></div>
+      <div data-hf-id="hf-19gf" id="name-scan" class="clip" data-composition-id="scan-band" data-composition-src="compositions/components/scan-band.html" data-start="1.15" data-duration="3.5" data-track-index="1" data-width="880" data-height="220" data-variable-values='{"wordmark":"LU MINGFEI","band_angle":12}'></div>
+      <div data-hf-id="hf-y48f" class="line bottom"></div><div data-hf-id="hf-mlgk" class="foot"><span data-hf-id="hf-ccla">LOCAL STARTUP SEQUENCE</span><span data-hf-id="hf-z0cs">RED / 01</span></div>
+    </section>
+    <section data-hf-id="hf-fa3m" id="compose" class="clip scene-two" data-start="5.2" data-duration="5.1" data-track-index="2">
+      <div data-hf-id="hf-pz6r" class="topline"><span data-hf-id="hf-uqsv">DRAGON CODEX BOOT</span><span data-hf-id="hf-d752">02 / COMPOSE</span></div><div data-hf-id="hf-hrib" class="line top"></div>
+      <div data-hf-id="hf-jahy" class="side-title" id="side-title">WAKE.<br data-hf-id="hf-rsrt" /><strong data-hf-id="hf-odrc">THINK.</strong><br data-hf-id="hf-szow" />BUILD.</div>
+      <div data-hf-id="hf-f14a" class="signal" id="signal"><div data-hf-id="hf-wluu">&gt; signal <b data-hf-id="hf-ycpe">received</b></div><div data-hf-id="hf-t2mx">&gt; context <b data-hf-id="hf-083j">assembled</b></div><div data-hf-id="hf-yl9b">&gt; workspace <b data-hf-id="hf-qs2c">ready</b></div></div>
+      <div data-hf-id="hf-nwyt" class="corner" id="corner">MAKE THE NEXT MOVE</div>
+      <svg data-hf-id="hf-9byi" class="trace" viewBox="0 0 645 100" fill="none" aria-hidden="true"><path data-hf-id="hf-xlwb" id="trace-path" d="M0 77 L90 22 L180 70 L285 10 L395 72 L505 22 L645 62" stroke="#ff646e" stroke-width="4" /></svg>
+      <div data-hf-id="hf-cu8f" class="line bottom"></div><div data-hf-id="hf-3ly4" class="foot"><span data-hf-id="hf-uq1b">FROM SIGNAL TO POSSIBILITY</span><span data-hf-id="hf-xtfp">RED / 02</span></div>
+    </section>
+    <section data-hf-id="hf-1xsl" id="handoff" class="clip scene-three" data-start="10.3" data-duration="4.1" data-track-index="3">
+      <div data-hf-id="hf-t5z8" class="intro" id="intro">03 / HANDOFF TO LIVE WORKSPACE</div>
+      <div data-hf-id="hf-05sn" id="portal"><img data-hf-id="hf-workspace-bg" class="workspace-bg" src="assets/lu-mingfei-workspace-bg.png" alt="" /><div data-hf-id="hf-ufsv" class="bar"><i data-hf-id="hf-6bgx" class="dot"></i><i data-hf-id="hf-0j5x" class="dot"></i><i data-hf-id="hf-1q30" class="dot"></i><span data-hf-id="hf-d3rb" class="brand">CODEX</span></div><div data-hf-id="hf-mcm7" class="content"><div data-hf-id="hf-2dx0" class="prompt">&gt; ready when you are</div><div data-hf-id="hf-lin8" class="ready">Let's build<span data-hf-id="hf-fwxv" class="cursor" id="cursor"></span></div><div data-hf-id="hf-k7nr" class="desc">Your workspace is opening.</div></div></div>
+      <div data-hf-id="hf-50y3" class="handoff" id="handoff-label">LIVE WINDOW CONNECTING</div>
+    </section>
+    <audio data-hf-id="hf-zbyz" id="boot-audio" data-start="0" data-duration="14.4" src="assets/boot.wav"></audio>
+  </div>
+  <script>
+    window.__timelines=window.__timelines||{};
+    const tl=gsap.timeline({paused:true});
+    tl.fromTo('#art',{scale:1.13,x:-60,opacity:0},{scale:1,x:0,opacity:1,duration:2.6,ease:'power3.out'},0);
+    tl.fromTo('#scan',{y:-50,opacity:0},{y:1120,opacity:.75,duration:2.35,ease:'power1.inOut'},.25);
+    tl.to('#scan',{y:-50,opacity:.2,duration:0},3.2).to('#scan',{y:1120,opacity:.55,duration:2.0,ease:'power1.inOut'},3.25);
+    tl.fromTo('#title-block',{y:60,opacity:0},{y:0,opacity:1,duration:.9,ease:'power3.out'},1.0);
+    tl.to('#title-block',{x:45,opacity:0,duration:.55,ease:'power2.in'},4.6);
+    tl.to('#art',{scale:1.045,x:-35,duration:4.8,ease:'sine.inOut'},5.2);
+    tl.fromTo('#side-title',{x:95,opacity:0},{x:0,opacity:1,duration:.95,ease:'power3.out'},5.35);
+    tl.fromTo('#signal',{x:90,opacity:0},{x:0,opacity:1,duration:.8,ease:'power3.out'},6.1);
+    tl.fromTo('#corner',{y:22,opacity:0},{y:0,opacity:1,duration:.7,ease:'power2.out'},6.75);
+    tl.fromTo('#trace-path',{strokeDasharray:1200,strokeDashoffset:1200},{strokeDashoffset:0,duration:2.6,ease:'power2.inOut'},7.0);
+    tl.set('#scan',{y:-50,opacity:.4},7.1).to('#scan',{y:1120,opacity:.5,duration:1.8,ease:'power1.inOut'},7.1);
+    tl.to('#side-title',{x:65,opacity:0,duration:.6,ease:'power2.in'},9.6).to('#signal',{x:50,opacity:0,duration:.5,ease:'power2.in'},9.7);
+    tl.to('#art',{scale:1.08,opacity:0,duration:1.0,ease:'power2.inOut'},10.15).to('#art-dark',{opacity:0,duration:.6},10.3);
+    tl.fromTo('#portal',{scale:.62,opacity:0},{scale:1,opacity:1,duration:1.3,ease:'power3.out'},10.3);
+    tl.fromTo('#portal .workspace-bg',{opacity:0},{opacity:.72,duration:.7,ease:'power2.inOut'},10.85);
+    tl.fromTo('#intro',{y:-25,opacity:0},{y:0,opacity:1,duration:.7,ease:'power2.out'},10.5);
+    tl.fromTo('#handoff-label',{y:20,opacity:0},{y:0,opacity:1,duration:.6,ease:'power2.out'},11.15);
+    tl.to('#cursor',{opacity:.15,duration:.25,ease:'steps(1)'},11.75).to('#cursor',{opacity:1,duration:.25,ease:'steps(1)'},12.0);
+    tl.to('#portal',{scale:1.714285714,borderRadius:0,duration:1.5,ease:'power2.inOut'},12.45);
+    tl.to('#intro',{opacity:0,duration:.3},12.35).to('#handoff-label',{opacity:0,duration:.3},12.35);
+    window.__timelines.main=tl;tl.seek(0);
+  </script>
+</body>
+</html>

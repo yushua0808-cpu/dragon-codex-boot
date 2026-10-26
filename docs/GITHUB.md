@@ -26,6 +26,6 @@ gh repo create dragon-codex-boot --public --source . --remote origin --push --de
 ## 发布内容边界
 
 - 源码、配置模板和本项目文档使用 MIT 许可证。
-- 默认 ZIP 包含程序、示例配置、完整1080p龙娘启动视频、导入及入口替换脚本、一键恢复/重新扫描、许可证和文档。首次运行默认替换可识别的快捷方式，必须在 Release 说明中明确。
+- 默认 ZIP 包含程序、示例配置、完整1080p Codex 主题启动视频、导入及入口替换脚本、一键恢复/重新扫描、许可证和文档。首次运行默认替换可识别的快捷方式，必须在 Release 说明中明确。
 - 原角色图、其他制作中间文件、提取的官方图标、本机路径与日志没有纳入源码仓库。
-- 视频放在 `media/startup.mp4`，素材说明放在 `media/MEDIA_NOTICE.md`；代码 MIT 许可不自动扩展到角色、音乐和第三方标志。
+- 视频放在 `media/startup.mp4`，可编辑源码在 `animation/`，素材说明放在 `media/MEDIA_NOTICE.md`；代码 MIT 许可不自动扩展到第三方名称和标志。
