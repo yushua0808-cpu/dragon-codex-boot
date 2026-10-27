@@ -46,5 +46,8 @@
       "Height": 1
     }
   ],
-  "DisplayName": "Dragon Codex Boot"
+  "DisplayName": "Dragon Codex Boot",
+  "TargetDisplay": "auto",
+  "BindToAppWindow": true,
+  "WaitForContent": true
 }

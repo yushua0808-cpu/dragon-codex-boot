@@ -11,5 +11,11 @@ $argsList=@('/nologo','/target:exe','/platform:x64',('/out:'+(Join-Path $outputR
 if ($LASTEXITCODE -ne 0) { throw 'Test harness compilation failed.' }
 & (Join-Path $outputRoot 'GeometryTests.exe') (Join-Path $repoRoot 'config/launcher.example.json')
 if ($LASTEXITCODE -ne 0) { throw 'Geometry or configuration tests failed.' }
+$argsList[$argsList.Length-1]=Join-Path $repoRoot 'tests/LifecycleTests.cs'
+$argsList[3]='/out:'+(Join-Path $outputRoot 'LifecycleTests.exe')
+& (Join-Path $framework 'csc.exe') @argsList
+if ($LASTEXITCODE -ne 0) { throw 'Lifecycle harness compilation failed.' }
+& (Join-Path $outputRoot 'LifecycleTests.exe')
+if ($LASTEXITCODE -ne 0) { throw 'Lifecycle tests failed.' }
 & (Join-Path $repoRoot 'tests/EntrypointTests.ps1')
 Get-Content -LiteralPath (Join-Path $outputRoot 'qa/self-test.json') -Raw
