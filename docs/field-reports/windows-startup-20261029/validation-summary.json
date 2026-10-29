@@ -1,0 +1,130 @@
+{
+  "scope": "Historical local 0.3.0 validation; not upstream release certification",
+  "date": "2026-10-29",
+  "timezone": "Asia/Shanghai",
+  "localLauncherSha256": "C36499FA41966B128E59D384C925AA2D145C94F4EFB7C5955513D5AC6061F422",
+  "deterministic": {
+    "passed": true,
+    "cases": [
+      "warm-handoff-terminal",
+      "cold-delayed-window",
+      "exit-residue-settle",
+      "tray-instance-activation",
+      "failed-activation-two-attempt-limit",
+      "activation-pid-handoff-to-successor",
+      "media-end-short-responsiveness-lapse",
+      "media-end-late-readiness-no-replay",
+      "window-replacement",
+      "client-exit-after-ready-no-relaunch",
+      "cancellation-and-late-callbacks",
+      "unknown-probe-fails-closed",
+      "verified-window-with-incomplete-enumeration",
+      "stale-snapshot",
+      "deadline-media-once",
+      "activation-hresult-failure"
+    ],
+    "assertions": 57
+  },
+  "nativeFixtures": {
+    "passed": true,
+    "cases": 30,
+    "assertions": 60,
+    "groups": {
+      "warm": 10,
+      "cold": 10,
+      "exit-residue": 10
+    },
+    "realClient": false,
+    "realMedia": false
+  },
+  "mediaFixtures": [
+    {
+      "mode": "warm",
+      "seconds": 15.325,
+      "activations": 0,
+      "passed": true,
+      "realMedia": true,
+      "realClient": false
+    },
+    {
+      "mode": "cold",
+      "seconds": 15.351,
+      "activations": 1,
+      "passed": true,
+      "realMedia": true,
+      "realClient": false
+    },
+    {
+      "mode": "late",
+      "seconds": 20.252,
+      "activations": 1,
+      "passed": true,
+      "realMedia": true,
+      "realClient": false
+    },
+    {
+      "mode": "cancel",
+      "seconds": 1.697,
+      "activations": 0,
+      "passed": true,
+      "realMedia": true,
+      "realClient": false
+    },
+    {
+      "mode": "timeout",
+      "seconds": 20.764,
+      "activations": 2,
+      "passed": true,
+      "realMedia": true,
+      "realClient": false
+    },
+    {
+      "mode": "minimized",
+      "seconds": 15.5,
+      "activations": 0,
+      "passed": true,
+      "realMedia": true,
+      "realClient": false
+    }
+  ],
+  "realClientWarm": {
+    "passed": true,
+    "runs": 1,
+    "seconds": 15.459,
+    "checks": {
+      "singlePlayback": true,
+      "videoFinished": true,
+      "duplicateFocused": true,
+      "noAppActivation": true,
+      "targetVerified": true,
+      "foregroundVerified": true,
+      "overlayClosed": true,
+      "noFailure": true,
+      "originalClientSurvives": true
+    }
+  },
+  "realClientColdLaunchTested": false,
+  "realClientImmediateReopenTested": false,
+  "nativeAppInternalIntegrationImplemented": false,
+  "rawLogsIncluded": false,
+  "binaryIncluded": false,
+  "contributionValidation": {
+    "date": "2026-10-29",
+    "baseCommit": "c63a203e5857e85fb3c8a9891eddb570e7a27b54",
+    "policyReference": {
+      "passed": true,
+      "cases": 16,
+      "assertions": 57
+    },
+    "upstreamRequiredFileSnapshot": {
+      "script": "scripts/test.ps1",
+      "passed": true,
+      "geometryConfigurationAssertions": 22,
+      "isolatedShortcutAssertions": 33,
+      "selfTestGeometryCases": 605,
+      "selfTestPlacementCases": 12,
+      "videoExists": false,
+      "nativeUiTested": false
+    }
+  }
+}

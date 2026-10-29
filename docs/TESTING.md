@@ -29,3 +29,8 @@
 快捷方式检查 `scripts/install-start-menu.ps1 -Action Verify` 只验证 `.lnk` 的目标和图标，不证明已经固定到开始菜单。
 
 自动入口替换的验证命令为 `scripts/integrate-entrypoints.ps1 -Action Verify`，结果写入 `.integration/report.json`。它验证文件和元数据，不证明开始菜单/任务栏缓存已经刷新。手动检查首次运行、重新扫描和恢复之后，实际点击各处快捷方式是否走预期入口；确认 `.integration/report.json` 中的失败和扫描限制。测试报告不能代替这些 Windows Shell 验收。
+
+
+## Windows 实机排障案例
+
+[2026-10-29：退出竞态、动画回放与原生入口边界](field-reports/windows-startup-20261029/README.md)记录了 Windows 11 环境下的本地修复、脱敏验证摘要及可离线复验的生命周期策略。文中 0.2.1/0.3.0 是本地构建编号；夹具测试和一次真实热启动不能代替真实冷启动验收，也不表示上游运行时代码已采用这些修改。
