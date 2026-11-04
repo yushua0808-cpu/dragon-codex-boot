@@ -159,11 +159,16 @@ try {
     $script:desktopShell=New-Object -ComObject Shell.Application
     if ($Action -eq 'Restore') { Restore-Links;$report.Status=if ($report.Errors.Count -or $report.Preserved.Count) { 'RestoredWithPreservedChanges' } else { 'Restored' };return }
     if ($Action -eq 'Verify') {
-        foreach ($entry in @($state.Entries | Where-Object { !$_.Restored })) {
+        $activeEntries=@($state.Entries | Where-Object { !$_.Restored })
+        if ($activeEntries.Count -eq 0) {
+            $report.Errors+=@{Path=$statePath;Reason='No active shortcut records to verify.'}
+        }
+        foreach ($entry in $activeEntries) {
             if ((Test-Path -LiteralPath $entry.Path) -and (Hash $entry.Path) -eq $entry.InstalledSHA256 -and (Link-Is-Launcher $entry.Path)) { $report.AlreadyOwned++ }
             else { $report.Preserved+=@{Path=$entry.Path;Reason='Shortcut no longer matches the installed version.'} }
         }
-        $report.Status='Verified';return
+        $report.Status=if ($report.Errors.Count -or $report.Preserved.Count -or $report.AlreadyOwned -eq 0) { 'VerificationFailed' } else { 'Verified' }
+        return
     }
     if (!(Test-Path -LiteralPath $exePath -PathType Leaf)) { throw 'Extract or build the complete launcher first.' }
     $cfg=Get-Content -LiteralPath (Join-Path $AppRoot 'launcher.json') -Encoding UTF8 -Raw | ConvertFrom-Json
