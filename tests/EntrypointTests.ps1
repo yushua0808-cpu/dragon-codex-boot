@@ -5,7 +5,10 @@ $appRoot=Join-Path $fixture 'app'
 $linksRoot=Join-Path $fixture 'shortcuts'
 $nested=Join-Path $linksRoot 'nested'
 New-Item -ItemType Directory -Path $appRoot,$linksRoot,$nested -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $repoRoot 'build/DragonCodexBoot/DragonCodexBoot.exe') -Destination $appRoot
+$builtLauncher=Join-Path $repoRoot 'build/DragonCodexBoot/DragonCodexBoot.exe'
+$fixtureLauncher=Join-Path $appRoot 'DragonCodexBoot.exe'
+if (Test-Path -LiteralPath $builtLauncher -PathType Leaf) { Copy-Item -LiteralPath $builtLauncher -Destination $fixtureLauncher }
+else { [IO.File]::WriteAllBytes($fixtureLauncher,[byte[]]@(0)) }
 Copy-Item -LiteralPath (Join-Path $repoRoot 'config/launcher.example.json') -Destination (Join-Path $appRoot 'launcher.json')
 $official=Join-Path $fixture 'OfficialClient.exe'
 $other=Join-Path $fixture 'Other.exe'
@@ -54,7 +57,30 @@ $again=Run 'Install'
 Check ($again.Replaced -eq 0 -and $again.AlreadyOwned -eq 2) 'Explicit rescan is idempotent.'
 $state=Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
 Check ($state.Entries.Count -eq 2) 'Rescan must not replace original backups.'
-$verify=Run 'Verify';Check ($verify.AlreadyOwned -eq 2) 'Installed links must verify.'
+$verify=Run 'Verify'
+Check ($verify.Status -eq 'Verified' -and $verify.AlreadyOwned -eq 2 -and $verify.Preserved.Count -eq 0 -and $verify.Errors.Count -eq 0) 'Installed links must verify successfully.'
+$stateSnapshot=[IO.File]::ReadAllBytes($statePath)
+$directInstalled=[IO.File]::ReadAllBytes($direct)
+$appsInstalled=[IO.File]::ReadAllBytes($apps)
+$tampered=$shell.CreateShortcut($direct);$tampered.Description='Tampered after installation';$tampered.Save()
+$tamperedHash=Hash $direct
+$tamperedVerify=Run 'Verify'
+Check ($tamperedVerify.Status -eq 'VerificationFailed' -and $tamperedVerify.AlreadyOwned -eq 1 -and
+    @($tamperedVerify.Preserved | Where-Object { $_.Path -eq $direct }).Count -eq 1 -and
+    (Hash $direct) -eq $tamperedHash) 'Tampered links must fail verification without being changed.'
+[IO.File]::WriteAllBytes($direct,$directInstalled)
+Remove-Item -LiteralPath $apps
+$missingVerify=Run 'Verify'
+Check ($missingVerify.Status -eq 'VerificationFailed' -and $missingVerify.AlreadyOwned -eq 1 -and
+    @($missingVerify.Preserved | Where-Object { $_.Path -eq $apps }).Count -eq 1 -and
+    !(Test-Path -LiteralPath $apps)) 'Missing links must fail verification without being recreated.'
+[IO.File]::WriteAllBytes($apps,$appsInstalled)
+$state.Entries=@();$state | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $statePath -Encoding UTF8
+$emptyVerify=Run 'Verify'
+Check ($emptyVerify.Status -eq 'VerificationFailed' -and $emptyVerify.AlreadyOwned -eq 0 -and $emptyVerify.Errors.Count -eq 1) 'Zero active records must fail verification.'
+[IO.File]::WriteAllBytes($statePath,$stateSnapshot)
+$verify=Run 'Verify'
+Check ($verify.Status -eq 'Verified' -and $verify.AlreadyOwned -eq 2) 'Fixture must verify after failure cases are reverted.'
 $changed=$shell.CreateShortcut($direct);$changed.Description='User changed shortcut';$changed.Save()
 $changedHash=Hash $direct
 $restore=Run 'Restore'
@@ -94,6 +120,8 @@ try {
 } finally { $lock.Dispose() }
 $unwritten=Run 'Restore'
 Check ((Hash $lockedLink) -eq $lockedOriginal) 'Restore must accept an unchanged original after a failed write.'
+$qaRoot=Join-Path $fixture 'qa'
+New-Item -ItemType Directory -Path $qaRoot -Force | Out-Null
 @{ok=$true;checks=$checks;scope='Isolated .lnk file metadata and backup/restore only; no actual user entrypoints changed.'} |
-    ConvertTo-Json | Set-Content -LiteralPath (Join-Path $repoRoot 'build/DragonCodexBoot/qa/entrypoint-tests.json') -Encoding UTF8
+    ConvertTo-Json | Set-Content -LiteralPath (Join-Path $qaRoot 'entrypoint-tests.json') -Encoding UTF8
 Write-Output ('PASS: '+$checks+' isolated entrypoint assertions. No desktop UI or actual shortcuts changed.')

@@ -15,7 +15,7 @@
   "Volume": 1,
   "PlayerWidth": 1920,
   "PlayerHeight": 1080,
-  "MatchClientToPlayer": true,
+  "MatchClientToPlayer": false,
   "ScreenFrames": [
     {
       "Time": 12.65,
